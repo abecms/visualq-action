@@ -8,6 +8,9 @@ inputs:
   api-key:
     description: 'VisualQ API key'
     required: true
+  project:
+    description: 'VisualQ project slug'
+    required: true
   type:
     description: 'Run type: test or baseline'
     default: 'test'

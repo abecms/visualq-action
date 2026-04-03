@@ -1,7 +1,7 @@
 {
   "name": "visualq-action",
   "version": "1.0.0",
-  "private": true,
+
   "description": "GitHub Action for VisualQ visual regression testing",
   "main": "dist/index.js",
   "scripts": {

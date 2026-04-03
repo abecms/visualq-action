@@ -30,6 +30,7 @@ interface CIStatusResponse {
 async function run() {
   try {
     const apiKey = core.getInput('api-key', { required: true })
+    const project = core.getInput('project', { required: true })
     const type = core.getInput('type') || 'test'
     const scenarios = core.getInput('scenarios')
     const wait = core.getInput('wait') !== 'false'
@@ -38,6 +39,7 @@ async function run() {
     const context = github.context
 
     const body: Record<string, unknown> = {
+      project,
       type,
       commitSha: context.sha,
       branch: context.ref.replace('refs/heads/', ''),
@@ -70,7 +72,7 @@ async function run() {
       return
     }
 
-    const triggerData: CIRunResponse = await triggerRes.json()
+    const triggerData = (await triggerRes.json()) as CIRunResponse
     const { runId } = triggerData
 
     core.setOutput('run-id', runId)
@@ -96,7 +98,7 @@ async function run() {
         continue
       }
 
-      const statusData: CIStatusResponse = await statusRes.json()
+      const statusData = (await statusRes.json()) as CIStatusResponse
 
       if (statusData.status === 'running') {
         core.info('Still running...')
@@ -104,7 +106,7 @@ async function run() {
       }
 
       core.setOutput('status', statusData.status)
-      const reportUrl = `${apiUrl}/projects`
+      const reportUrl = `${apiUrl}/projects/${project}/tests`
       core.setOutput('report-url', reportUrl)
 
       if (statusData.status === 'failed') {
