@@ -1,0 +1,38 @@
+name: 'VisualQ Visual Regression'
+description: 'Run visual regression tests with VisualQ'
+branding:
+  icon: 'eye'
+  color: 'purple'
+
+inputs:
+  api-key:
+    description: 'VisualQ API key'
+    required: true
+  type:
+    description: 'Run type: test or baseline'
+    default: 'test'
+  scenarios:
+    description: 'Comma-separated scenario labels to test'
+    required: false
+  wait:
+    description: 'Wait for run completion (true/false)'
+    default: 'true'
+  api-url:
+    description: 'VisualQ API base URL'
+    default: 'https://visualq.ai'
+
+outputs:
+  run-id:
+    description: 'The VRT run ID'
+  status:
+    description: 'Run status: completed or failed'
+  passed:
+    description: 'Number of passed scenarios'
+  failed:
+    description: 'Number of failed scenarios'
+  report-url:
+    description: 'URL to the visual report'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
