@@ -12,7 +12,7 @@ inputs:
     description: 'VisualQ project slug'
     required: true
   type:
-    description: 'Run type: test or baseline'
+    description: 'Run type: test, baseline, or perf'
     default: 'test'
   scenarios:
     description: 'Comma-separated scenario labels to test'
@@ -23,6 +23,18 @@ inputs:
   api-url:
     description: 'VisualQ API base URL'
     default: 'https://visualq.ai'
+  browsers:
+    description: 'Comma-separated browsers to test: chromium,firefox,webkit'
+    required: false
+  environment:
+    description: 'Environment name or slug to run tests against (e.g. staging, production)'
+    required: false
+  jira-key:
+    description: 'Jira issue key to link results to (e.g. PROJ-123)'
+    required: false
+  perf-budgets:
+    description: 'JSON performance budgets, e.g. {"lcp":2500,"cls":0.1,"score":75}'
+    required: false
 
 outputs:
   run-id:
@@ -35,6 +47,8 @@ outputs:
     description: 'Number of failed scenarios'
   report-url:
     description: 'URL to the visual report'
+  perf-score:
+    description: 'Performance score (0-100) when type=perf'
 
 runs:
   using: 'node20'

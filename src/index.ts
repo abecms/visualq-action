@@ -9,6 +9,8 @@ interface CIRunResponse {
   runId: string
   projectId: string
   type: string
+  environmentId?: string
+  environmentName?: string
   statusUrl: string
   message: string
 }
@@ -25,6 +27,13 @@ interface CIStatusResponse {
     failed: number
   }
   error?: string
+  perfScore?: number
+  perfAvgLcp?: number
+  perfAvgCls?: number
+  perfBudgetResult?: {
+    pass: boolean
+    violations: string[]
+  }
 }
 
 async function run() {
@@ -35,6 +44,10 @@ async function run() {
     const scenarios = core.getInput('scenarios')
     const wait = core.getInput('wait') !== 'false'
     const apiUrl = core.getInput('api-url') || 'https://visualq.ai'
+    const jiraKey = core.getInput('jira-key')
+    const browsers = core.getInput('browsers')
+    const environment = core.getInput('environment')
+    const perfBudgetsInput = core.getInput('perf-budgets')
 
     const context = github.context
 
@@ -46,6 +59,13 @@ async function run() {
       ciProvider: 'github-actions',
     }
 
+    if (environment) {
+      body.environment = environment
+    }
+    if (jiraKey) {
+      body.jiraKey = jiraKey
+    }
+
     if (context.payload.pull_request) {
       body.prNumber = context.payload.pull_request.number
       body.prUrl = context.payload.pull_request.html_url
@@ -53,6 +73,16 @@ async function run() {
 
     if (scenarios) {
       body.scenarios = scenarios.split(',').map(s => s.trim()).filter(Boolean)
+    }
+    if (browsers) {
+      body.browsers = browsers.split(',').map(s => s.trim()).filter(Boolean)
+    }
+    if (perfBudgetsInput) {
+      try {
+        body.perfBudgets = JSON.parse(perfBudgetsInput)
+      } catch {
+        core.warning('Invalid perf-budgets JSON — ignoring')
+      }
     }
 
     core.info(`Triggering VisualQ ${type} run...`)
@@ -76,7 +106,11 @@ async function run() {
     const { runId } = triggerData
 
     core.setOutput('run-id', runId)
-    core.info(`Run started: ${runId}`)
+    if (triggerData.environmentName) {
+      core.info(`Run started: ${runId} (environment: ${triggerData.environmentName})`)
+    } else {
+      core.info(`Run started: ${runId}`)
+    }
 
     if (!wait) {
       core.info('Not waiting for completion (wait=false)')
@@ -106,11 +140,32 @@ async function run() {
       }
 
       core.setOutput('status', statusData.status)
-      const reportUrl = `${apiUrl}/projects/${project}/tests`
+      let reportUrl = `${apiUrl}/projects/${project}/tests`
+      const resolvedEnvId = triggerData.environmentId
+      if (resolvedEnvId) reportUrl += `?environmentId=${encodeURIComponent(resolvedEnvId)}`
       core.setOutput('report-url', reportUrl)
 
       if (statusData.status === 'failed') {
         core.setFailed(`Run failed: ${statusData.error || 'Unknown error'}`)
+        return
+      }
+
+      if (statusData.perfBudgetResult) {
+        core.setOutput('perf-score', (statusData.perfScore ?? 0).toString())
+        if (!statusData.perfBudgetResult.pass) {
+          const violations = statusData.perfBudgetResult.violations.join(', ')
+          core.setFailed(`Performance budget exceeded: ${violations}`)
+          return
+        }
+        core.info(`Performance budget passed (score: ${statusData.perfScore})`)
+      }
+
+      if (statusData.type === 'perf-test' && statusData.perfScore != null) {
+        core.setOutput('perf-score', statusData.perfScore.toString())
+        core.info(`Performance audit completed — score: ${statusData.perfScore}/100`)
+        if (!statusData.perfBudgetResult) {
+          core.info('No perf budgets set — passing by default')
+        }
         return
       }
 
