@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import { setActionLocale, detectActionLocale, t } from './i18n.js'
 
 const POLL_INTERVAL_MS = 5_000
 const MAX_POLL_DURATION_MS = 300_000
@@ -34,6 +35,9 @@ interface CIStatusResponse {
     pass: boolean
     violations: string[]
   }
+  seoScore?: number
+  seoPassed?: number
+  seoFailed?: number
 }
 
 async function run() {
@@ -48,6 +52,9 @@ async function run() {
     const browsers = core.getInput('browsers')
     const environment = core.getInput('environment')
     const perfBudgetsInput = core.getInput('perf-budgets')
+    const localeInput = core.getInput('locale')
+
+    setActionLocale(localeInput || detectActionLocale())
 
     const context = github.context
 
@@ -81,24 +88,25 @@ async function run() {
       try {
         body.perfBudgets = JSON.parse(perfBudgetsInput)
       } catch {
-        core.warning('Invalid perf-budgets JSON — ignoring')
+        core.warning(t('action.warn.invalidPerfBudgets'))
       }
     }
 
-    core.info(`Triggering VisualQ ${type} run...`)
+    core.info(t('action.log.triggering', { type }))
 
     const triggerRes = await fetch(`${apiUrl}/api/ci/run`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': apiKey,
+        'Accept-Language': localeInput || process.env.VISUALQ_LOCALE || process.env.LANG || 'en',
       },
       body: JSON.stringify(body),
     })
 
     if (!triggerRes.ok) {
       const errText = await triggerRes.text()
-      core.setFailed(`Failed to trigger run: ${triggerRes.status} ${errText}`)
+      core.setFailed(t('action.error.triggerFailed', { status: triggerRes.status, body: errText }))
       return
     }
 
@@ -107,13 +115,13 @@ async function run() {
 
     core.setOutput('run-id', runId)
     if (triggerData.environmentName) {
-      core.info(`Run started: ${runId} (environment: ${triggerData.environmentName})`)
+      core.info(t('action.log.runStartedWithEnv', { runId, environment: triggerData.environmentName }))
     } else {
-      core.info(`Run started: ${runId}`)
+      core.info(t('action.log.runStarted', { runId }))
     }
 
     if (!wait) {
-      core.info('Not waiting for completion (wait=false)')
+      core.info(t('action.log.notWaiting'))
       core.setOutput('status', 'started')
       return
     }
@@ -128,14 +136,14 @@ async function run() {
       })
 
       if (!statusRes.ok) {
-        core.warning(`Status check returned ${statusRes.status}, retrying...`)
+        core.warning(t('action.warn.statusRetry', { status: statusRes.status }))
         continue
       }
 
       const statusData = (await statusRes.json()) as CIStatusResponse
 
       if (statusData.status === 'running') {
-        core.info('Still running...')
+        core.info(t('action.log.stillRunning'))
         continue
       }
 
@@ -146,7 +154,7 @@ async function run() {
       core.setOutput('report-url', reportUrl)
 
       if (statusData.status === 'failed') {
-        core.setFailed(`Run failed: ${statusData.error || 'Unknown error'}`)
+        core.setFailed(t('action.error.runFailed', { message: statusData.error || 'Unknown error' }))
         return
       }
 
@@ -154,18 +162,33 @@ async function run() {
         core.setOutput('perf-score', (statusData.perfScore ?? 0).toString())
         if (!statusData.perfBudgetResult.pass) {
           const violations = statusData.perfBudgetResult.violations.join(', ')
-          core.setFailed(`Performance budget exceeded: ${violations}`)
+          core.setFailed(t('action.error.budgetExceeded', { violations }))
           return
         }
-        core.info(`Performance budget passed (score: ${statusData.perfScore})`)
+        core.info(t('action.log.budgetPassed', { score: statusData.perfScore ?? 0 }))
       }
 
       if (statusData.type === 'perf-test' && statusData.perfScore != null) {
         core.setOutput('perf-score', statusData.perfScore.toString())
-        core.info(`Performance audit completed — score: ${statusData.perfScore}/100`)
+        core.info(t('action.log.perfCompleted', { score: statusData.perfScore }))
         if (!statusData.perfBudgetResult) {
-          core.info('No perf budgets set — passing by default')
+          core.info(t('action.log.noBudgets'))
         }
+        return
+      }
+
+      if (statusData.type === 'seo-test' && statusData.seoScore != null) {
+        core.setOutput('seo-score', statusData.seoScore.toString())
+        core.info(t('action.log.seoCompleted', {
+          score: statusData.seoScore,
+          passed: statusData.seoPassed ?? 0,
+          failed: statusData.seoFailed ?? 0,
+        }))
+        if ((statusData.seoFailed ?? 0) > 0) {
+          core.setFailed(t('action.error.seoFailed', { count: statusData.seoFailed ?? 0 }))
+          return
+        }
+        core.info(t('action.log.seoPassed'))
         return
       }
 
@@ -173,21 +196,25 @@ async function run() {
         core.setOutput('passed', statusData.summary.passed.toString())
         core.setOutput('failed', statusData.summary.failed.toString())
 
-        core.info(`Results: ${statusData.summary.total} total, ${statusData.summary.passed} passed, ${statusData.summary.failed} failed`)
+        core.info(t('action.log.results', {
+          total: statusData.summary.total,
+          passed: statusData.summary.passed,
+          failed: statusData.summary.failed,
+        }))
 
         if (statusData.summary.failed > 0) {
-          core.setFailed(`${statusData.summary.failed} visual difference(s) detected`)
+          core.setFailed(t('action.error.diffsDetected', { count: statusData.summary.failed }))
           return
         }
       }
 
-      core.info('All scenarios passed!')
+      core.info(t('action.log.allPassed'))
       return
     }
 
-    core.setFailed(`Run timed out after ${MAX_POLL_DURATION_MS / 1000}s`)
+    core.setFailed(t('action.error.timeout', { seconds: MAX_POLL_DURATION_MS / 1000 }))
   } catch (error) {
-    core.setFailed(`Action failed: ${(error as Error).message}`)
+    core.setFailed(t('action.error.actionFailed', { message: (error as Error).message }))
   }
 }
 

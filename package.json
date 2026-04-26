@@ -6,7 +6,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src/index.ts -o dist --minify",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "readme:translate": "node --experimental-strip-types --no-warnings scripts/translate-readme.ts"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",

@@ -12,7 +12,7 @@ inputs:
     description: 'VisualQ project slug'
     required: true
   type:
-    description: 'Run type: test, baseline, or perf'
+    description: 'Run type: test, baseline, perf, or seo'
     default: 'test'
   scenarios:
     description: 'Comma-separated scenario labels to test'
@@ -35,6 +35,9 @@ inputs:
   perf-budgets:
     description: 'JSON performance budgets, e.g. {"lcp":2500,"cls":0.1,"score":75}'
     required: false
+  locale:
+    description: 'Output language for action logs (en, fr, es, de, it, pt, pt-BR, nl, pl, tr, ru, zh, ja, ko, ar, hi). Auto-detected from LANG/VISUALQ_LOCALE env vars when omitted.'
+    required: false
 
 outputs:
   run-id:
@@ -49,6 +52,8 @@ outputs:
     description: 'URL to the visual report'
   perf-score:
     description: 'Performance score (0-100) when type=perf'
+  seo-score:
+    description: 'SEO score (0-100) when type=seo'
 
 runs:
   using: 'node20'
