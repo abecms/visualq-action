@@ -38,6 +38,10 @@ interface CIStatusResponse {
   seoScore?: number
   seoPassed?: number
   seoFailed?: number
+  frt?: {
+    failedSteps?: number
+    featureCount?: number | null
+  }
 }
 
 async function run() {
@@ -52,6 +56,7 @@ async function run() {
     const browsers = core.getInput('browsers')
     const environment = core.getInput('environment')
     const perfBudgetsInput = core.getInput('perf-budgets')
+    const featureIdsInput = core.getInput('feature-ids')
     const localeInput = core.getInput('locale')
 
     setActionLocale(localeInput || detectActionLocale())
@@ -83,6 +88,9 @@ async function run() {
     }
     if (browsers) {
       body.browsers = browsers.split(',').map(s => s.trim()).filter(Boolean)
+    }
+    if (featureIdsInput && type === 'frt') {
+      body.featureIds = featureIdsInput.split(',').map(s => s.trim()).filter(Boolean)
     }
     if (perfBudgetsInput) {
       try {
@@ -148,7 +156,7 @@ async function run() {
       }
 
       core.setOutput('status', statusData.status)
-      let reportUrl = `${apiUrl}/projects/${project}/tests`
+      let reportUrl = `${apiUrl}/projects/${project}/${type === 'frt' ? 'frt/history' : 'tests'}`
       const resolvedEnvId = triggerData.environmentId
       if (resolvedEnvId) reportUrl += `?environmentId=${encodeURIComponent(resolvedEnvId)}`
       core.setOutput('report-url', reportUrl)
@@ -174,6 +182,27 @@ async function run() {
         if (!statusData.perfBudgetResult) {
           core.info(t('action.log.noBudgets'))
         }
+        return
+      }
+
+      if (statusData.type === 'frt-test') {
+        if (statusData.summary) {
+          core.setOutput('passed', statusData.summary.passed.toString())
+          core.setOutput('failed', statusData.summary.failed.toString())
+          core.info(t('action.log.results', {
+            total: statusData.summary.total,
+            passed: statusData.summary.passed,
+            failed: statusData.summary.failed,
+          }))
+          if (statusData.frt?.failedSteps != null) {
+            core.setOutput('frt-failed-steps', statusData.frt.failedSteps.toString())
+          }
+          if (statusData.summary.failed > 0) {
+            core.setFailed(t('action.error.frtFailed', { count: statusData.summary.failed }))
+            return
+          }
+        }
+        core.info(t('action.log.frtPassed'))
         return
       }
 

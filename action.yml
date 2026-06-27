@@ -1,5 +1,5 @@
-name: 'VisualQ Visual Regression'
-description: 'Run visual regression tests with VisualQ'
+name: 'VisualQ'
+description: 'Run VisualQ quality gates in CI — visual regression, perf budgets, SEO, a11y, security, tracking, and FRT functional tests'
 branding:
   icon: 'eye'
   color: 'purple'
@@ -12,8 +12,11 @@ inputs:
     description: 'VisualQ project slug'
     required: true
   type:
-    description: 'Run type: test, baseline, perf, or seo'
+    description: 'Run type: test, baseline, perf, seo, a11y, security, tracking, or frt'
     default: 'test'
+  feature-ids:
+    description: 'Comma-separated FRT feature IDs (only when type=frt)'
+    required: false
   scenarios:
     description: 'Comma-separated scenario labels to test'
     required: false
@@ -48,6 +51,8 @@ outputs:
     description: 'Number of passed scenarios'
   failed:
     description: 'Number of failed scenarios'
+  frt-failed-steps:
+    description: 'Number of failed FRT steps when type=frt'
   report-url:
     description: 'URL to the visual report'
   perf-score:
