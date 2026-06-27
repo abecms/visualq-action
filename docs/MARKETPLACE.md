@@ -2,7 +2,7 @@
 
 Repo: [abecms/visualq-action](https://github.com/abecms/visualq-action)
 
-**État actuel (juin 2026)** : release `v1.0.0` + tag `v1` existent, mais l’action **n’est pas listée** sur la Marketplace (`404` sur `github.com/marketplace/actions/visualq-action`). Des changements locaux (FRT, i18n, README) doivent être publiés avant la soumission.
+**État actuel (juin 2026)** : release **v1.1.0** publiée, tag `v1` pointe sur `v1.1.0`. La case **Marketplace** doit être cochée manuellement sur [éditer la release](https://github.com/abecms/visualq-action/releases/edit/v1.1.0) (2FA navigateur — pas d’API).
 
 ## Prérequis GitHub (compte `abecms`)
 
