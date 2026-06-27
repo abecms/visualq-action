@@ -87,7 +87,7 @@ Si la case Marketplace n’apparaît pas : vérifier `branding` + `description` 
 
 ### 4. Vérification post-publication
 
-- [ ] Listing live : [marketplace/actions/visualq-action](https://github.com/marketplace/actions/visualq-action)
+- [ ] Listing live : [marketplace/actions/visualq-quality-gates](https://github.com/marketplace/actions/visualq-quality-gates)
 - [ ] Badge README : remplacer le placeholder par le badge Marketplace
 - [ ] Docs : `docs/content/docs/*/ci-cd/github-action.mdx` — lien Marketplace déjà dans `docs/src/app/[lang]/docs/layout.tsx`
 - [ ] `tasks/acquisition-plan.md` — cocher l’audit listing S3
@@ -95,7 +95,7 @@ Si la case Marketplace n’apparaît pas : vérifier `branding` + `description` 
 
 ## Notes Marketplace
 
-- **Nom d’action** : défini par `name:` dans `action.yml` (`VisualQ`). Doit être unique sur la Marketplace.
+- **Nom d’action** : défini par `name:` dans `action.yml` (`VisualQ Quality Gates`). Doit être unique sur la Marketplace — `VisualQ` seul est refusé (conflit user/org).
 - **Référence utilisateur** : `uses: abecms/visualq-action@v1` (tag majeur flottant).
 - **Breaking changes** : bump `v2` + nouveau tag `v2` ; ne pas force-push `v1` avec du breaking.
 - **Review** : les Actions Marketplace ne passent pas toujours par une review manuelle longue ; la validation est surtout sur le metadata YAML au moment de la release.

@@ -1,6 +1,6 @@
 # VisualQ — GitHub Action
 
-[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-VisualQ-purple?logo=github)](https://github.com/marketplace/actions/visualq-action)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-VisualQ%20Quality%20Gates-purple?logo=github)](https://github.com/marketplace/actions/visualq-quality-gates)
 
 Run **visual regression tests** and **6-pillar quality gates** on every pull request with [VisualQ](https://visualq.ai/login?utm_source=github&utm_medium=web&utm_campaign=acquisition). Catch pixel-level UI bugs, accessibility regressions, perf budget failures, and functional test regressions before production.
 

@@ -1,4 +1,4 @@
-name: 'VisualQ'
+name: 'VisualQ Quality Gates'
 description: 'Run VisualQ quality gates in CI — visual regression, perf budgets, SEO, a11y, security, tracking, and FRT functional tests'
 branding:
   icon: 'eye'
