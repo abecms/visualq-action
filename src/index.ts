@@ -38,6 +38,14 @@ interface CIStatusResponse {
   seoScore?: number
   seoPassed?: number
   seoFailed?: number
+  a11yScore?: number
+  a11yCriticalCount?: number
+  a11yTotalViolations?: number
+  a11yBudgetResult?: {
+    pass: boolean
+    violations: string[]
+    newViolationCount?: number
+  }
   frt?: {
     failedSteps?: number
     featureCount?: number | null
@@ -56,6 +64,7 @@ async function run() {
     const browsers = core.getInput('browsers')
     const environment = core.getInput('environment')
     const perfBudgetsInput = core.getInput('perf-budgets')
+    const a11yBudgetsInput = core.getInput('a11y-budgets')
     const featureIdsInput = core.getInput('feature-ids')
     const localeInput = core.getInput('locale')
 
@@ -97,6 +106,13 @@ async function run() {
         body.perfBudgets = JSON.parse(perfBudgetsInput)
       } catch {
         core.warning(t('action.warn.invalidPerfBudgets'))
+      }
+    }
+    if (a11yBudgetsInput) {
+      try {
+        body.a11yBudgets = JSON.parse(a11yBudgetsInput)
+      } catch {
+        core.warning(t('action.warn.invalidA11yBudgets'))
       }
     }
 
@@ -176,6 +192,21 @@ async function run() {
         core.info(t('action.log.budgetPassed', { score: statusData.perfScore ?? 0 }))
       }
 
+      if (statusData.a11yBudgetResult) {
+        if (statusData.a11yScore != null) {
+          core.setOutput('a11y-score', statusData.a11yScore.toString())
+        }
+        if (statusData.a11yCriticalCount != null) {
+          core.setOutput('a11y-critical-count', statusData.a11yCriticalCount.toString())
+        }
+        if (!statusData.a11yBudgetResult.pass) {
+          const violations = statusData.a11yBudgetResult.violations.join(', ')
+          core.setFailed(t('action.error.a11yBudgetExceeded', { violations }))
+          return
+        }
+        core.info(t('action.log.a11yBudgetPassed', { score: statusData.a11yScore ?? 0 }))
+      }
+
       if (statusData.type === 'perf-test' && statusData.perfScore != null) {
         core.setOutput('perf-score', statusData.perfScore.toString())
         core.info(t('action.log.perfCompleted', { score: statusData.perfScore }))
@@ -218,6 +249,31 @@ async function run() {
           return
         }
         core.info(t('action.log.seoPassed'))
+        return
+      }
+
+      if (statusData.type === 'a11y-test') {
+        if (statusData.a11yScore != null) {
+          core.setOutput('a11y-score', statusData.a11yScore.toString())
+        }
+        if (statusData.a11yCriticalCount != null) {
+          core.setOutput('a11y-critical-count', statusData.a11yCriticalCount.toString())
+        }
+        core.info(t('action.log.a11yCompleted', {
+          score: statusData.a11yScore ?? 0,
+          critical: statusData.a11yCriticalCount ?? 0,
+          violations: statusData.a11yTotalViolations ?? 0,
+        }))
+        if (statusData.a11yBudgetResult && !statusData.a11yBudgetResult.pass) {
+          const violations = statusData.a11yBudgetResult.violations.join(', ')
+          core.setFailed(t('action.error.a11yBudgetExceeded', { violations }))
+          return
+        }
+        if ((statusData.a11yCriticalCount ?? 0) > 0 && !statusData.a11yBudgetResult) {
+          core.setFailed(t('action.error.a11yCriticalFailed', { count: statusData.a11yCriticalCount ?? 0 }))
+          return
+        }
+        core.info(t('action.log.a11yPassed'))
         return
       }
 

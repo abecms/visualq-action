@@ -2,7 +2,7 @@
 
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-VisualQ%20Quality%20Gates-purple?logo=github)](https://github.com/marketplace/actions/visualq-quality-gates)
 
-Run **visual regression tests** and **6-pillar quality gates** on every pull request with [VisualQ](https://visualq.ai/login?utm_source=github&utm_medium=web&utm_campaign=acquisition). Catch pixel-level UI bugs, accessibility regressions, perf budget failures, and functional test regressions before production.
+Run **VisualQ Quality Score gates** on every pull request — VRT, FRT, and six quality pillars in one CI step with [VisualQ](https://visualq.ai/login?utm_source=github&utm_medium=web&utm_campaign=acquisition). Catch visual bugs, accessibility regressions, perf budget failures, and functional test regressions before production.
 
 **Free Quality Audit** (no signup, real Lighthouse + axe): [visualq.ai/audit](https://visualq.ai/audit?utm_source=github&utm_medium=web&utm_campaign=acquisition)
 
@@ -13,8 +13,8 @@ Run **visual regression tests** and **6-pillar quality gates** on every pull req
 ## Quick start
 
 ```yaml
-# .github/workflows/visual-test.yml
-name: Visual Regression
+# .github/workflows/visualq-quality-gate.yml
+name: VisualQ Quality Gate
 on: [pull_request]
 
 jobs:

@@ -38,6 +38,9 @@ inputs:
   perf-budgets:
     description: 'JSON performance budgets, e.g. {"lcp":2500,"cls":0.1,"score":75}'
     required: false
+  a11y-budgets:
+    description: 'JSON accessibility budgets, e.g. {"minScore":80,"maxCritical":0,"maxNewViolations":0}'
+    required: false
   locale:
     description: 'Output language for action logs (en, fr, es, de, it, pt, pt-BR, nl, pl, tr, ru, zh, ja, ko, ar, hi). Auto-detected from LANG/VISUALQ_LOCALE env vars when omitted.'
     required: false
@@ -59,6 +62,10 @@ outputs:
     description: 'Performance score (0-100) when type=perf'
   seo-score:
     description: 'SEO score (0-100) when type=seo'
+  a11y-score:
+    description: 'Accessibility score (0-100) when type=a11y or when a11y budgets are set'
+  a11y-critical-count:
+    description: 'Critical accessibility violation count when type=a11y'
 
 runs:
   using: 'node20'
